@@ -4,18 +4,14 @@ import { CourseActions, CourseActionTypes } from "./course.action";
 
 export interface CourseState extends EntityState<Course> {
 
-    // coursesEntities: { [key: number]: Course };
-    // coursesOrder: number[];
+    allCoursesLoaded: boolean;
 }
 
-// export interface LessonsState {
-
-//     lessonsEntities: { [key: number]: Course };
-//     lessonsOrder: number[];
-// }
 export const adapter: EntityAdapter<Course> = createEntityAdapter<Course>();
 
-export const initialCoursesState: CourseState = adapter.getInitialState();
+export const initialCoursesState: CourseState = adapter.getInitialState({
+    allCoursesLoaded: false
+});
 
 export function coursesReducer(state = initialCoursesState, action: CourseActions): CourseState {
 
@@ -25,8 +21,21 @@ export function coursesReducer(state = initialCoursesState, action: CourseAction
 
             return adapter.addOne(action.payload.course, state);
 
+        case CourseActionTypes.AllCourseLoaded:
+            return adapter.addAll(action.payload.course, { ...state, allCoursesLoaded: true });
+
+        case CourseActionTypes.CourseSaved:
+            return adapter.updateOne(action.payload.course, state);
+
         default: {
             return state;
         }
     }
 }
+
+export const {
+    selectAll,
+    selectEntities,
+    selectIds,
+    selectTotal
+} = adapter.getSelectors();
