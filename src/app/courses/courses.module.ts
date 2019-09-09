@@ -27,6 +27,8 @@ import { EffectsModule } from '@ngrx/effects';
 import { CourseEffects } from './course.effects';
 import { StoreModule } from '@ngrx/store';
 import { coursesReducer } from './course.reducers';
+import { lessonsReducer } from './lessons.reducers';
+
 
 
 
@@ -68,6 +70,7 @@ export const coursesRoutes: Routes = [
         RouterModule.forChild(coursesRoutes),
         StoreModule.forFeature('course', coursesReducer),
         EffectsModule.forFeature([CourseEffects]),
+        StoreModule.forFeature('lessons', lessonsReducer),
     ],
     declarations: [HomeComponent, CoursesCardListComponent, CourseDialogComponent, CourseComponent],
     exports: [HomeComponent, CoursesCardListComponent, CourseDialogComponent, CourseComponent],

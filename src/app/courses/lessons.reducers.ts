@@ -1,0 +1,54 @@
+import { EntityState, createEntityAdapter, EntityAdapter } from "@ngrx/entity";
+import { Lesson } from "./model/lesson";
+import { CourseActions, CourseActionTypes } from "./course.action";
+
+export interface LessonsState extends EntityState<Lesson> {
+    loading: boolean;
+}
+
+function sortByCoursAndSeqNo(l1: Lesson, l2: Lesson) {
+    const compare = l1.courseId - l2.courseId;
+    if (compare !== 0) {
+        return compare;
+    } else {
+        return l1.seqNo - l2.seqNo;
+    }
+}
+
+export const adapter: EntityAdapter<Lesson> = createEntityAdapter<Lesson>({
+    sortComparer: sortByCoursAndSeqNo
+});
+export const initialLessonsState = adapter.getInitialState({
+    loading: false
+});
+
+export function lessonsReducer(state = initialLessonsState, action: CourseActions): LessonsState {
+
+    switch (action.type) {
+        case CourseActionTypes.LessonPageCancelled: {
+            return {
+                ...state,
+                loading: false
+            };
+        }
+        case CourseActionTypes.LessonsPageRequested: {
+            return {
+                ...state,
+                loading: true
+            };
+        }
+        case CourseActionTypes.LessonsPageLoaded: {
+            return adapter.addMany(action.payload.lessons, { ...state, loading: false });
+        }
+        default: {
+            return state;
+        }
+    }
+}
+
+export const {
+    selectAll,
+    selectEntities,
+    selectIds,
+    selectTotal
+} = adapter.getSelectors();

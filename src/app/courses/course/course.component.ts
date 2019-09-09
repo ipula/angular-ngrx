@@ -1,17 +1,22 @@
-import { AfterViewInit, Component, ElementRef, OnInit, ViewChild } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, OnInit, ViewChild, ChangeDetectionStrategy } from '@angular/core';
 import { ActivatedRoute } from "@angular/router";
 import { MatPaginator, MatTableDataSource } from "@angular/material";
 import { Course } from "../model/course";
 import { CoursesService } from "../services/courses.service";
 import { debounceTime, distinctUntilChanged, startWith, tap, delay } from 'rxjs/operators';
-import { merge, fromEvent } from "rxjs";
+import { merge, fromEvent, Observable } from "rxjs";
 import { LessonsDataSource } from "../services/lessons.datasource";
+import { Store, select } from '@ngrx/store';
+import { AppState } from '../../reducers';
+import { PageQuery } from '../course.action';
+import { selectLessonsPage, selectLessonsLoading } from '../course.selectors';
 
 
 @Component({
     selector: 'course',
     templateUrl: './course.component.html',
-    styleUrls: ['./course.component.css']
+    styleUrls: ['./course.component.css'],
+    changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class CourseComponent implements OnInit, AfterViewInit {
 
@@ -22,21 +27,24 @@ export class CourseComponent implements OnInit, AfterViewInit {
     displayedColumns = ["seqNo", "description", "duration"];
 
     @ViewChild(MatPaginator, { static: false }) paginator: MatPaginator;
+    loading$: Observable<boolean>;
 
 
     constructor(private route: ActivatedRoute,
-        private coursesService: CoursesService) {
+        private coursesService: CoursesService, private store: Store<AppState>) {
 
     }
 
     ngOnInit() {
 
         this.course = this.route.snapshot.data["course"];
-
-        this.dataSource = new LessonsDataSource(this.coursesService);
-
-        this.dataSource.loadLessons(this.course.id, 0, 3);
-
+        this.loading$ = this.store.pipe(select(selectLessonsLoading));
+        this.dataSource = new LessonsDataSource(this.store);
+        const initailPage: PageQuery = {
+            pageIndex: 0,
+            pageSize: 3
+        };
+        this.dataSource.loadLessons(this.course.id, initailPage);
     }
 
     ngAfterViewInit() {
@@ -50,10 +58,14 @@ export class CourseComponent implements OnInit, AfterViewInit {
     }
 
     loadLessonsPage() {
+
+        const newPage: PageQuery = {
+            pageIndex: this.paginator.pageIndex,
+            pageSize: this.paginator.pageSize
+        };
         this.dataSource.loadLessons(
             this.course.id,
-            this.paginator.pageIndex,
-            this.paginator.pageSize);
+            newPage);
     }
 
 
